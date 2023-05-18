@@ -1,0 +1,44 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+a {
+  text-decoration: none;
+}
+
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+}
+
+/* style scrollbar */
+.prompt::-webkit-scrollbar {
+  width: 1px !important;
+}
+
+.prompt::-webkit-scrollbar-thumb {
+  background-color: rgb(7, 131, 106);
+  border-radius: 10px;
+}
+
+/* @media (max-width: 500px) {
+  .prompt::-webkit-scrollbar {
+    display: none;
+  }
+
+  .prompt {
+    -ms-overflow-style: none; 
+    scrollbar-width: none; 
+  }
+} */
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+.hide-scrollbar {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
