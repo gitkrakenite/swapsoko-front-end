@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
-import { DummyProducts } from "../dummyData";
+// import { DummyProducts } from "../dummyData";
 import { useEffect, useState } from "react";
 import {
   AiFillStar,
@@ -9,11 +9,13 @@ import {
   AiOutlineEye,
   AiOutlineEyeInvisible,
 } from "react-icons/ai";
-import { BsPenFill } from "react-icons/bs";
+// import { BsPenFill } from "react-icons/bs";
 import Masonry from "react-masonry-css";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import axios from "../axios";
 import { toast } from "react-toastify";
+import Spinner from "../components/Spinner";
+import { logout } from "../features/auth/authSlice";
 
 const MyProfile = () => {
   const [showUpdate, setShowUpdate] = useState(false);
@@ -22,7 +24,8 @@ const MyProfile = () => {
 
   const { user } = useSelector((state) => state.auth);
 
-  const navigate = useNavigate;
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
@@ -74,17 +77,13 @@ const MyProfile = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const handleDeleteTrade = (id) => {
-    alert(`deleted id ${id}`);
-  };
-
   const handleUpdateUsername = async () => {
     const nameToCheck = { username };
     const { data } = await axios.post("/user/check", nameToCheck);
 
     if (data == "not exist") {
       alert("proceed");
-      const userData = { username };
+      // const userData = { username };
       // dispatch(register(userData));
       return;
     } else {
@@ -93,9 +92,50 @@ const MyProfile = () => {
     }
   };
   //
+
+  // fetch my products
+  const [myProducts, setMyProducts] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const fetchMyProducts = async () => {
+    try {
+      setLoading(true);
+      let myUser = user.username;
+      let userToSend = { username: myUser };
+      const { data } = await axios.post("/post/mine", userToSend);
+      if (data) {
+        setMyProducts(data);
+        setLoading(false);
+      }
+    } catch (error) {
+      setLoading(false);
+      toast.error("Failed To Fetch. Please logout then login");
+      console.log(error);
+    }
+  };
+
+  useEffect(() => {
+    fetchMyProducts();
+  }, []);
+
   const handleUpdateOther = (e) => {
     e.preventDefault();
     alert("updates");
+  };
+  const handleLogout = () => {
+    dispatch(logout());
+    navigate("/login");
+  };
+  const handleDeleteTrade = async (id) => {
+    // alert(`deleted id ${id}`);
+    let isDelete = confirm("Are You sure you want to delete ? ");
+    if (isDelete) {
+      try {
+        await axios.delete("/post/" + id);
+        toast.success("deleted trade");
+      } catch (error) {
+        toast.error("Action Failed. Check Network");
+      }
+    }
   };
 
   return (
@@ -231,17 +271,25 @@ const MyProfile = () => {
             <p>email : {user?.email} </p>
             <p>phone : {user?.phone} </p>
 
-            <div className="mt-[30px] flex justify-end">
+            {/* <div className="mt-[30px] flex justify-end">
               <BsPenFill
                 className="text-emerald-400 text-xl cursor-pointer"
                 onClick={() => {
                   setShowUpdate(true);
 
-                  //
                   setUpdateusername(user?.username);
                   setUpdateEmail(user?.email);
                 }}
               />
+            </div> */}
+            {/* logout */}
+            <div className="mt-[20px]">
+              <button
+                className="bg-orange-800 text-zinc-300 p-[10px] rounded-md"
+                onClick={handleLogout}
+              >
+                Logout
+              </button>
             </div>
           </div>
         </section>
@@ -254,55 +302,63 @@ const MyProfile = () => {
           All your Posts To Trade
         </p>
         <div>
-          <Masonry
-            breakpointCols={breakpointColumnsObj}
-            className="my-masonry-grid "
-            columnClassName="my-masonry-grid_column"
-          >
-            {DummyProducts.map((item) => (
-              <div key={item.id} className="bg-slate-800 rounded-lg">
-                <div className="image-item rounded-lg">
-                  <Link to={`/post/${item.id}`}>
-                    <img
-                      src={item.mainPhoto}
-                      alt=""
-                      className="w-full rounded-md max-h-[800px] object-cover"
-                    />
-                  </Link>
-                  <div className="mt-[10px] px-[6px] pb-[10px] ">
-                    <div className="flex justify-between mb-3 items-center">
-                      <p className="bg-orange-700 text-zinc-300 rounded-full p-[5px]">
-                        {item.creator.slice(0, 2)}
-                      </p>
+          {loading ? (
+            <div className="mt-[2em]">
+              <Spinner message="Fetching Your Trades" />
+            </div>
+          ) : (
+            <>
+              <Masonry
+                breakpointCols={breakpointColumnsObj}
+                className="my-masonry-grid "
+                columnClassName="my-masonry-grid_column"
+              >
+                {myProducts.map((item) => (
+                  <div key={item._id} className="bg-slate-800 rounded-lg">
+                    <div className="image-item rounded-lg">
+                      <Link to={`/post/${item._id}`}>
+                        <img
+                          src={item.mainPhoto}
+                          alt=""
+                          className="w-full rounded-md max-h-[800px] object-cover"
+                        />
+                      </Link>
+                      <div className="mt-[10px] px-[6px] pb-[10px] ">
+                        <div className="flex justify-between mb-3 items-center">
+                          <p className="bg-orange-700 text-zinc-300 rounded-full p-[5px]">
+                            {item.creator.slice(0, 2)}
+                          </p>
 
-                      <p>{item.title}</p>
-                    </div>
-                    <div className="flex justify-between mb-2 items-center">
-                      <div>
-                        <p className="text-emerald-500 cursor-pointer">
-                          #{item.category}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <p>
-                          <AiFillStar />
-                        </p>
-                        <p>{item.isVerified && "verified"}</p>
-                      </div>
-                      <div>
-                        <p
-                          className="text-emerald-500 text-2xl cursor-pointer"
-                          onClick={() => handleDeleteTrade(item.id)}
-                        >
-                          <AiOutlineDelete title="Delete Trade" />
-                        </p>
+                          <p>{item.title}</p>
+                        </div>
+                        <div className="flex justify-between mb-2 items-center">
+                          <div>
+                            <p className="text-emerald-500 cursor-pointer">
+                              #{item.category}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <p>
+                              <AiFillStar />
+                            </p>
+                            <p>{item.isVerified && "verified"}</p>
+                          </div>
+                          <div>
+                            <p
+                              className="text-emerald-500 text-2xl cursor-pointer"
+                              onClick={() => handleDeleteTrade(item._id)}
+                            >
+                              <AiOutlineDelete title="Delete Trade" />
+                            </p>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              </div>
-            ))}
-          </Masonry>
+                ))}
+              </Masonry>
+            </>
+          )}
         </div>
       </div>
     </div>

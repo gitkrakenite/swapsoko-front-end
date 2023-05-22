@@ -1,7 +1,9 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Spinner from "../components/Spinner";
 import { toast } from "react-toastify";
+import { useSelector } from "react-redux";
+import axios from "../axios";
 
 const Create = () => {
   // create product states
@@ -11,6 +13,10 @@ const Create = () => {
   const [mainPhoto, setMainPhoto] = useState("");
   const [secPhoto, setSecPhoto] = useState("");
   const [thirdPhoto, setThirdPhoto] = useState("");
+
+  const [loadingmainPhoto, setLoadingMainPhoto] = useState("");
+  const [loadingsecPhoto, setLoadingSecPhoto] = useState("");
+  const [loadingthirdPhoto, setLoadingThirdPhoto] = useState("");
 
   const [creator, setCreator] = useState("");
   const [title, setTitle] = useState("");
@@ -22,9 +28,11 @@ const Create = () => {
   const [exchangeFor, setExchangeFor] = useState("");
   const [contactInfo, setContactInfo] = useState("");
 
+  const { user } = useSelector((state) => state.auth);
+
   // uploading mainPhoto
   const postMainPhoto = async (pic) => {
-    setLoading(true);
+    setLoadingMainPhoto(true);
     if (pic === null || undefined) {
       toast.error("Please select main photo");
       setLoading(false);
@@ -37,7 +45,7 @@ const Create = () => {
     data.append("file", pic);
     data.append("upload_preset", "p2jnu3t2");
     try {
-      setLoading(true);
+      setLoadingMainPhoto(true);
       let res = await fetch(
         "https://api.cloudinary.com/v1_1/ddqs3ukux/image/upload",
         {
@@ -46,19 +54,20 @@ const Create = () => {
         }
       );
       const urlData = await res.json();
-      setLoading(false);
+      setLoadingMainPhoto(false);
       setMainPhoto(urlData.url);
       toast.success("Uploaded Main Photo");
       console.log(`mainPhoto: ${mainPhoto}`);
     } catch (error) {
       setLoading(false);
+      setLoadingMainPhoto(false);
       toast.error("Error uploading Main Photo");
     }
   };
 
   // uploading secPhoto
   const postSecPhoto = async (pic) => {
-    setLoading(true);
+    setLoadingSecPhoto(true);
     if (pic === null || undefined) {
       toast.error("Please select second photo");
       setLoading(false);
@@ -71,7 +80,7 @@ const Create = () => {
     data.append("file", pic);
     data.append("upload_preset", "p2jnu3t2");
     try {
-      setLoading(true);
+      setLoadingSecPhoto(true);
       let res = await fetch(
         "https://api.cloudinary.com/v1_1/ddqs3ukux/image/upload",
         {
@@ -80,11 +89,12 @@ const Create = () => {
         }
       );
       const urlData = await res.json();
-      setLoading(false);
+      setLoadingSecPhoto(false);
       setSecPhoto(urlData.url);
       toast.success("Uploaded Second Photo");
       console.log(`secPhoto: ${secPhoto}`);
     } catch (error) {
+      setLoadingSecPhoto(false);
       setLoading(false);
       toast.error("Error Uploading Second Photo");
     }
@@ -92,7 +102,7 @@ const Create = () => {
 
   // uploading thirdPhoto
   const postThirdPhoto = async (pic) => {
-    setLoading(true);
+    setLoadingThirdPhoto(true);
     if (pic === null || undefined) {
       toast.error("Please select second photo");
       setLoading(false);
@@ -105,7 +115,7 @@ const Create = () => {
     data.append("file", pic);
     data.append("upload_preset", "p2jnu3t2");
     try {
-      setLoading(true);
+      setLoadingThirdPhoto(true);
       let res = await fetch(
         "https://api.cloudinary.com/v1_1/ddqs3ukux/image/upload",
         {
@@ -114,17 +124,20 @@ const Create = () => {
         }
       );
       const urlData = await res.json();
-      setLoading(false);
+      setLoadingThirdPhoto(false);
       setThirdPhoto(urlData.url);
       toast.success("Uploaded Third Photo");
       console.log(`thirdPhoto: ${thirdPhoto}`);
     } catch (error) {
+      setLoadingThirdPhoto(false);
       setLoading(false);
       toast.error("Error Uploading Third Photo");
     }
   };
 
-  const handleCreateTrade = (e) => {
+  const navigate = useNavigate();
+
+  const handleCreateTrade = async (e) => {
     e.preventDefault();
     if (!title) {
       window.scrollTo({
@@ -155,7 +168,32 @@ const Create = () => {
     } else if (!thirdPhoto) {
       return toast.error("Third Photo Missing");
     } else {
-      //  setCreator(user.username)
+      try {
+        setLoading(true);
+        setCreator(user.username);
+
+        const postData = {
+          creator,
+          title,
+          location,
+          description,
+          defects,
+          used,
+          category,
+          exchangeFor,
+          mainPhoto,
+          secPhoto,
+          thirdPhoto,
+          contactInfo,
+        };
+        const response = await axios.post("/post", postData);
+        setLoading(false);
+        toast.success(`Trade for ${title} created`);
+        navigate("/");
+      } catch (error) {
+        setLoading(false);
+        toast.error("Action Failed. Check Network");
+      }
     }
   };
 
@@ -219,7 +257,6 @@ const Create = () => {
               placeholder="i.e The handset's hardware include a 6.1-inch OLED display, 5nm Apple A14 Bionic processor, and a dual-camera setup with a large sensor. 5G and Face ID are on board, too. The Apple iPhone 12 starting price is $829."
               className="bg-transparent outline-none p-[5px] rounded-lg"
               style={{ border: "1px solid #8a8888" }}
-              maxLength={100}
               minLength={5}
               required
               value={description}
@@ -247,32 +284,7 @@ const Create = () => {
               onChange={(e) => setLocation(e.target.value)}
             />
           </div>
-          <div className="flex flex-col gap-[14px] mb-[20px]">
-            <label
-              htmlFor="exchange"
-              className="text-md text-zinc-400"
-              style={{}}
-            >
-              What Do you Want in Exchange ??
-              <p className="text-zinc-300 text-sm mt-[8px]">
-                ** Be Specific on what you want max(150 words)**
-              </p>
-            </label>
-            <textarea
-              name="exchange"
-              id="exchange"
-              cols="30"
-              rows="2"
-              placeholder="i.e I want a JBL bass boosted headphone with theme lights. I prefer black as the color"
-              className="bg-transparent outline-none p-[5px] rounded-lg"
-              style={{ border: "1px solid #8a8888" }}
-              maxLength={150}
-              minLength={5}
-              required
-              value={exchangeFor}
-              onChange={(e) => setExchangeFor(e.target.value)}
-            ></textarea>
-          </div>
+
           <div className="flex flex-col gap-[14px] mb-[20px]">
             <label
               htmlFor="defects"
@@ -353,6 +365,31 @@ const Create = () => {
           </div>
           <div className="flex flex-col gap-[14px] mb-[20px]">
             <label
+              htmlFor="exchange"
+              className="text-md text-zinc-400"
+              style={{}}
+            >
+              What Do you Want in Exchange ??
+              <p className="text-zinc-300 text-sm mt-[8px]">
+                ** Be Specific on what you want **
+              </p>
+            </label>
+            <textarea
+              name="exchange"
+              id="exchange"
+              cols="30"
+              rows="2"
+              placeholder="i.e I want a JBL bass boosted headphone with theme lights. I prefer black as the color"
+              className="bg-transparent outline-none p-[5px] rounded-lg"
+              style={{ border: "1px solid #8a8888" }}
+              minLength={5}
+              required
+              value={exchangeFor}
+              onChange={(e) => setExchangeFor(e.target.value)}
+            ></textarea>
+          </div>
+          <div className="flex flex-col gap-[14px] mb-[20px]">
+            <label
               htmlFor="contact"
               className="text-md text-zinc-400"
               style={{}}
@@ -387,13 +424,13 @@ const Create = () => {
                 >
                   <p>Please Select The Main Photo</p>
                   <div className="flex flex-col items-center">
-                    {loading ? (
+                    {loadingmainPhoto ? (
                       <Spinner message="uploading ..." />
                     ) : (
                       <img
                         src={
-                          imagePreview
-                            ? imagePreview
+                          mainPhoto
+                            ? mainPhoto
                             : "https://pixel-share-25.netlify.app/assets/preview-35b286f0.png"
                         }
                         alt=""
@@ -422,13 +459,13 @@ const Create = () => {
                 >
                   <p>Please Select The Second Photo</p>
                   <div className="flex flex-col items-center">
-                    {loading ? (
+                    {loadingsecPhoto ? (
                       <Spinner message="uploading ..." />
                     ) : (
                       <img
                         src={
-                          imagePreview
-                            ? imagePreview
+                          secPhoto
+                            ? secPhoto
                             : "https://pixel-share-25.netlify.app/assets/preview-35b286f0.png"
                         }
                         alt=""
@@ -457,13 +494,13 @@ const Create = () => {
                 >
                   <p>Please Select The Third Photo</p>
                   <div className="flex flex-col items-center">
-                    {loading ? (
+                    {loadingthirdPhoto ? (
                       <Spinner message="uploading ..." />
                     ) : (
                       <img
                         src={
-                          imagePreview
-                            ? imagePreview
+                          thirdPhoto
+                            ? thirdPhoto
                             : "https://pixel-share-25.netlify.app/assets/preview-35b286f0.png"
                         }
                         alt=""

@@ -1,9 +1,28 @@
 import { Link } from "react-router-dom";
 import { AiOutlineHeart } from "react-icons/ai";
 import { useSelector } from "react-redux";
+import { useEffect, useState } from "react";
 
-const Navbar = () => {
+const Navbar = ({ cartItemCount }) => {
   const { user } = useSelector((state) => state.auth);
+
+  // we need to count how many items are in the cart
+  function getCartItemCount() {
+    const cartItems = localStorage.getItem("cart");
+    let count = 0;
+
+    if (cartItems) {
+      const parsedCartItems = JSON.parse(cartItems);
+      count = parsedCartItems.length;
+    }
+
+    return count;
+  }
+
+  useEffect(() => {
+    getCartItemCount();
+  }, []);
+
   return (
     <div className="mb-[20px]">
       {/* desktop wrapper */}
@@ -27,7 +46,7 @@ const Navbar = () => {
                 <Link to="/fav" className="no-underline">
                   <AiOutlineHeart className="text-emerald-500 text-2xl cursor-pointer" />
                   <p className="absolute bottom-3 left-7 text-sm text-zinc-300">
-                    2
+                    {getCartItemCount()}
                   </p>
                 </Link>
               </li>

@@ -21,12 +21,18 @@ const Login = () => {
 
   useEffect(() => {
     if (isError) {
-      toast.error("Action Failed");
+      toast.error("Action Failed. Check Network or Login Details");
     }
 
     if (user || isSuccess) {
       navigate("/");
-      toast.success("Welcome Back");
+      // toast.success("Welcome Back");
+    }
+
+    if (navigator.onLine) {
+      console.log("online");
+    } else {
+      toast.error("Network Error");
     }
 
     dispatch(reset());

@@ -1,17 +1,17 @@
 import Feed from "../components/Feed";
 import Navbar from "../components/Navbar";
 
-const Home = () => {
+const Home = ({ cartItemCount, setCartItemCount }) => {
   return (
     <div className=" px-[10px] sm:px-[3em]">
       {/* wrapper */}
       <div>
         {/* navbar */}
         <div>
-          <Navbar />
+          <Navbar cartItemCount={cartItemCount} />
         </div>
         <div>
-          <Feed />
+          <Feed setCartItemCount={setCartItemCount} />
         </div>
       </div>
     </div>

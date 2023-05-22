@@ -11,15 +11,18 @@ import { RiComputerLine, RiHeadphoneLine, RiServiceLine } from "react-icons/ri";
 import { BsPhone } from "react-icons/bs";
 import { BiFridge } from "react-icons/bi";
 import { MdOutlineSportsBaseball, MdOutlineSportsRugby } from "react-icons/md";
-import { DummyProducts } from "../dummyData";
+
 import Masonry from "react-masonry-css";
 import "./feed.css";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { AiFillHeart } from "react-icons/ai";
 import Spinner from "./Spinner";
+import axios from "../axios";
+import { toast } from "react-toastify";
+import { useSelector } from "react-redux";
 
-const Feed = () => {
+const Feed = ({ setCartItemCount }) => {
   const breakpointColumnsObj = {
     default: 4,
     3000: 6,
@@ -29,13 +32,59 @@ const Feed = () => {
     500: 1,
   };
 
+  // scroll to top functionality
+  const [showArrow, setShowArrow] = useState(false);
+
+  const { user } = useSelector((state) => state.auth);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.pageYOffset > 300) {
+        setShowArrow(true);
+      } else {
+        setShowArrow(false);
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
+
+  const handleScrollTop = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  // fetch all posts
+  const [loading, setLoading] = useState(false);
+  const [allPosts, setAllPosts] = useState([]);
+
+  const fetchAllPosts = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get("/post");
+      if (response) {
+        setAllPosts(response.data);
+        setLoading(false);
+      }
+    } catch (error) {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAllPosts();
+  }, []);
+
   //   pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const recordsPerPage = 12;
   const lastIndex = currentPage * recordsPerPage;
   const firstIndex = lastIndex - recordsPerPage;
-  const records = DummyProducts?.slice(firstIndex, lastIndex);
-  const npage = Math.ceil(DummyProducts?.length / recordsPerPage);
+  const records = allPosts?.slice(firstIndex, lastIndex);
+  const npage = Math.ceil(allPosts?.length / recordsPerPage);
   const numbers = [...Array(npage + 1).keys()].slice(1);
 
   const [start, setStart] = useState(1);
@@ -64,29 +113,6 @@ const Feed = () => {
     setCurrentPage(id);
   };
 
-  // scroll to top functionality
-  const [showArrow, setShowArrow] = useState(false);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      if (window.pageYOffset > 300) {
-        setShowArrow(true);
-      } else {
-        setShowArrow(false);
-      }
-    };
-
-    window.addEventListener("scroll", handleScroll);
-
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-    };
-  }, []);
-
-  const handleScrollTop = () => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
   // search  states
   const [searchText, setSearchText] = useState("");
   const [searchTimeout, setsearchTimeout] = useState(null);
@@ -102,7 +128,7 @@ const Feed = () => {
 
     setsearchTimeout(
       setTimeout(() => {
-        const searchResults = DummyProducts?.filter(
+        const searchResults = allPosts?.filter(
           (item) =>
             item.title.toLowerCase().includes(searchText.toLowerCase()) ||
             item.location.toLowerCase().includes(searchText.toLowerCase()) ||
@@ -115,12 +141,37 @@ const Feed = () => {
     );
   };
 
-  // fetch all posts
-  const [loading, setLoading] = useState(false);
+  // let us use localstorage to store favorites
+  const handleAddFavorite = async (product) => {
+    // Retrieve the existing cart items from localStorage
+    const cartItems = JSON.parse(localStorage.getItem("cart")) || [];
+
+    // Check if the product already exists in the cart
+    const existingProduct = cartItems.find((item) => item._id === product._id);
+
+    if (existingProduct) {
+      // Product already exists, return a message
+      toast.error("Already Added To Favorites");
+      return;
+    }
+
+    // Create a new cart with the existing items and the new product
+    const updatedCart = [...cartItems, product];
+
+    // Update the cart items in localStorage
+    localStorage.setItem("cart", JSON.stringify(updatedCart));
+
+    // Update the cart item count in the parent component
+    setCartItemCount((prevCount) => prevCount + 1);
+
+    toast.success(`${product.title} added to Favorites`);
+    return;
+  };
 
   return (
     <div className="relative pb-[2em]">
       {/* wrapper */}
+
       <div>
         {/* arrow to scroll to top */}
         {showArrow && (
@@ -160,51 +211,285 @@ const Feed = () => {
               </h2>
             </div>
             <div className="mb-[10px] flex  gap-[20px] justify-between w-100 overflow-x-scroll pb-3 prompt">
-              <div className="flex items-center gap-[10px] cursor-pointer hover:text-emerald-400 active:text-emerald-500">
+              <div
+                className="flex items-center gap-[10px] cursor-pointer hover:text-emerald-400 active:text-emerald-500"
+                onClick={fetchAllPosts}
+              >
                 <MdOutlineSportsRugby />
                 <p>All</p>
               </div>
-              <div className="flex items-center gap-[10px] cursor-pointer hover:text-emerald-400 active:text-emerald-500">
-                <GiKiwiFruit />
-                <p>Beauty</p>
-              </div>
-              <div className="flex items-center gap-[10px] cursor-pointer hover:text-emerald-400 active:text-emerald-500">
+              <div
+                className="flex items-center gap-[10px] cursor-pointer hover:text-emerald-400 active:text-emerald-500"
+                onClick={async () => {
+                  try {
+                    setLoading(true);
+                    let filterToSearch = "service";
+                    let filterData = { category: filterToSearch };
+                    const { data } = await axios.post(
+                      "/post/category",
+                      filterData
+                    );
+                    if (data) {
+                      setAllPosts(data);
+                      setLoading(false);
+                      return;
+                    }
+                  } catch (error) {
+                    setLoading(false);
+                    toast.error("Action Unsuccesful");
+                  }
+                }}
+              >
                 <RiServiceLine />
                 <p>Services</p>
               </div>
-              <div className="flex  items-center gap-[10px] cursor-pointer hover:text-emerald-400 active:text-emerald-500">
+              <div
+                className="flex items-center gap-[10px] cursor-pointer hover:text-emerald-400 active:text-emerald-500"
+                onClick={async () => {
+                  try {
+                    setLoading(true);
+                    let filterToSearch = "beauty";
+                    let filterData = { category: filterToSearch };
+                    const { data } = await axios.post(
+                      "/post/category",
+                      filterData
+                    );
+                    if (data) {
+                      setAllPosts(data);
+                      setLoading(false);
+                      return;
+                    }
+                  } catch (error) {
+                    setLoading(false);
+                    toast.error("Action Unsuccesful");
+                  }
+                }}
+              >
+                <GiKiwiFruit />
+                <p>Beauty</p>
+              </div>
+              <div
+                className="flex  items-center gap-[10px] cursor-pointer hover:text-emerald-400 active:text-emerald-500"
+                onClick={async () => {
+                  try {
+                    setLoading(true);
+                    let filterToSearch = "phones";
+                    let filterData = { category: filterToSearch };
+                    const { data } = await axios.post(
+                      "/post/category",
+                      filterData
+                    );
+                    if (data) {
+                      setAllPosts(data);
+                      setLoading(false);
+                      return;
+                    }
+                  } catch (error) {
+                    setLoading(false);
+                    toast.error("Action Unsuccesful");
+                  }
+                }}
+              >
                 <BsPhone />
                 <p>Phones</p>
               </div>
-              <div className="flex items-center gap-[10px] cursor-pointer hover:text-emerald-400 active:text-emerald-500">
+              <div
+                className="flex items-center gap-[10px] cursor-pointer hover:text-emerald-400 active:text-emerald-500"
+                onClick={async () => {
+                  try {
+                    setLoading(true);
+                    let filterToSearch = "appliances";
+                    let filterData = { category: filterToSearch };
+                    const { data } = await axios.post(
+                      "/post/category",
+                      filterData
+                    );
+                    if (data) {
+                      setAllPosts(data);
+                      setLoading(false);
+                      return;
+                    }
+                  } catch (error) {
+                    setLoading(false);
+                    toast.error("Action Unsuccesful");
+                  }
+                }}
+              >
                 <BiFridge />
                 <p>Appliances</p>
               </div>
-              <div className="flex items-center gap-[10px] cursor-pointer hover:text-emerald-400 active:text-emerald-500">
+              <div
+                className="flex items-center gap-[10px] cursor-pointer hover:text-emerald-400 active:text-emerald-500"
+                onClick={async () => {
+                  try {
+                    setLoading(true);
+                    let filterToSearch = "computing";
+                    let filterData = { category: filterToSearch };
+                    const { data } = await axios.post(
+                      "/post/category",
+                      filterData
+                    );
+                    if (data) {
+                      setAllPosts(data);
+                      setLoading(false);
+                      return;
+                    }
+                  } catch (error) {
+                    setLoading(false);
+                    toast.error("Action Unsuccesful");
+                  }
+                }}
+              >
                 <RiComputerLine />
                 <p>Computing</p>
               </div>
-              <div className="flex items-center gap-[10px] cursor-pointer hover:text-emerald-400 active:text-emerald-500">
+              <div
+                className="flex items-center gap-[10px] cursor-pointer hover:text-emerald-400 active:text-emerald-500"
+                onClick={async () => {
+                  try {
+                    setLoading(true);
+                    let filterToSearch = "gaming";
+                    let filterData = { category: filterToSearch };
+                    const { data } = await axios.post(
+                      "/post/category",
+                      filterData
+                    );
+                    if (data) {
+                      setAllPosts(data);
+                      setLoading(false);
+                      return;
+                    }
+                  } catch (error) {
+                    setLoading(false);
+                    toast.error("Action Unsuccesful");
+                  }
+                }}
+              >
                 <TbDeviceGamepad2 className="text-zinc-300" />
                 <p>Gaming</p>
               </div>
-              <div className="flex items-center gap-[10px] cursor-pointer hover:text-emerald-400 active:text-emerald-500">
+              <div
+                className="flex items-center gap-[10px] cursor-pointer hover:text-emerald-400 active:text-emerald-500"
+                onClick={async () => {
+                  try {
+                    setLoading(true);
+                    let filterToSearch = "fashion";
+                    let filterData = { category: filterToSearch };
+                    const { data } = await axios.post(
+                      "/post/category",
+                      filterData
+                    );
+                    if (data) {
+                      setAllPosts(data);
+                      setLoading(false);
+                      return;
+                    }
+                  } catch (error) {
+                    setLoading(false);
+                    toast.error("Action Unsuccesful");
+                  }
+                }}
+              >
                 <GiMailShirt />
                 <p>Fashion</p>
               </div>
-              <div className="flex items-center gap-[10px] cursor-pointer hover:text-emerald-400 active:text-emerald-500">
+              <div
+                className="flex items-center gap-[10px] cursor-pointer hover:text-emerald-400 active:text-emerald-500"
+                onClick={async () => {
+                  try {
+                    setLoading(true);
+                    let filterToSearch = "music";
+                    let filterData = { category: filterToSearch };
+                    const { data } = await axios.post(
+                      "/post/category",
+                      filterData
+                    );
+                    if (data) {
+                      setAllPosts(data);
+                      setLoading(false);
+                      return;
+                    }
+                  } catch (error) {
+                    setLoading(false);
+                    toast.error("Action Unsuccesful");
+                  }
+                }}
+              >
                 <RiHeadphoneLine />
                 <p>Music</p>
               </div>
-              <div className="flex items-center gap-[10px] cursor-pointer hover:text-emerald-400 active:text-emerald-500">
+              <div
+                className="flex items-center gap-[10px] cursor-pointer hover:text-emerald-400 active:text-emerald-500"
+                onClick={async () => {
+                  try {
+                    setLoading(true);
+                    let filterToSearch = "automobile";
+                    let filterData = { category: filterToSearch };
+                    const { data } = await axios.post(
+                      "/post/category",
+                      filterData
+                    );
+                    if (data) {
+                      setAllPosts(data);
+                      setLoading(false);
+                      return;
+                    }
+                  } catch (error) {
+                    setLoading(false);
+                    toast.error("Action Unsuccesful");
+                  }
+                }}
+              >
                 <AiOutlineCar />
                 <p>Automobile</p>
               </div>
-              <div className="flex items-center gap-[10px] cursor-pointer hover:text-emerald-400 active:text-emerald-500">
+              <div
+                className="flex items-center gap-[10px] cursor-pointer hover:text-emerald-400 active:text-emerald-500"
+                onClick={async () => {
+                  try {
+                    setLoading(true);
+                    let filterToSearch = "sports";
+                    let filterData = { category: filterToSearch };
+                    const { data } = await axios.post(
+                      "/post/category",
+                      filterData
+                    );
+                    if (data) {
+                      setAllPosts(data);
+                      setLoading(false);
+                      return;
+                    }
+                  } catch (error) {
+                    setLoading(false);
+                    toast.error("Action Unsuccesful");
+                  }
+                }}
+              >
                 <MdOutlineSportsBaseball />
                 <p>Sports</p>
               </div>
-              <div className="flex items-center gap-[10px] cursor-pointer hover:text-emerald-400 active:text-emerald-500">
+              <div
+                className="flex items-center gap-[10px] cursor-pointer hover:text-emerald-400 active:text-emerald-500"
+                onClick={async () => {
+                  try {
+                    setLoading(true);
+                    let filterToSearch = "others";
+                    let filterData = { category: filterToSearch };
+                    const { data } = await axios.post(
+                      "/post/category",
+                      filterData
+                    );
+                    if (data) {
+                      setAllPosts(data);
+                      setLoading(false);
+                      return;
+                    }
+                  } catch (error) {
+                    setLoading(false);
+                    toast.error("Action Unsuccesful");
+                  }
+                }}
+              >
                 <MdOutlineSportsRugby />
                 <p>Others</p>
               </div>
@@ -223,11 +508,12 @@ const Feed = () => {
         ) : (
           <>
             <div className="">
+              {/* {console.log(allPosts)} */}
               {searchText ? (
                 <>
                   <div className="mb-[15px] text-zinc-400">
                     {searchText && <p>Results For : {searchText}</p>}
-                    {searchedResults?.length}
+                    {/* {searchedResults?.length} */}
                   </div>
 
                   {searchedResults?.length >= 1 ? (
@@ -240,11 +526,11 @@ const Feed = () => {
                         >
                           {searchedResults?.map((item) => (
                             <div
-                              key={item.id}
+                              key={item._id}
                               className="bg-slate-800 rounded-lg"
                             >
                               <div className="image-item rounded-lg">
-                                <Link to={`/post/${item.id}`}>
+                                <Link to={`/post/${item._id}`}>
                                   <img
                                     src={item.mainPhoto}
                                     alt=""
@@ -263,12 +549,27 @@ const Feed = () => {
                                     <p className="text-emerald-500 cursor-pointer">
                                       #{item.category}
                                     </p>
-                                    <div className="flex items-center gap-2">
-                                      <p>
-                                        <AiFillStar />
-                                      </p>
-                                      <p>{item.isVerified && "verified"}</p>
-                                    </div>
+                                    {item.isVerified == "nope" && (
+                                      <div className="flex items-center gap-2">
+                                        <p>
+                                          <AiFillStar />
+                                        </p>
+                                        <p>verified</p>
+                                      </div>
+                                    )}
+
+                                    {user && (
+                                      <div>
+                                        <p
+                                          className="text-emerald-500 text-xl cursor-pointer"
+                                          onClick={() =>
+                                            handleAddFavorite(item)
+                                          }
+                                        >
+                                          <AiFillHeart title="Add To Favorites" />
+                                        </p>
+                                      </div>
+                                    )}
                                   </div>
                                 </div>
                               </div>
@@ -291,52 +592,75 @@ const Feed = () => {
                 </>
               ) : (
                 <>
-                  <Masonry
-                    breakpointCols={breakpointColumnsObj}
-                    className="my-masonry-grid "
-                    columnClassName="my-masonry-grid_column"
-                  >
-                    {records.map((item) => (
-                      <div key={item.id} className="bg-slate-800 rounded-lg">
-                        <div className="image-item rounded-lg">
-                          <Link to={`/post/${item.id}`}>
-                            <img
-                              src={item.mainPhoto}
-                              alt=""
-                              className="w-full rounded-md max-h-[800px] object-cover"
-                            />
-                          </Link>
-                          <div className="mt-[10px] px-[6px] pb-[10px] ">
-                            <div className="flex justify-between mb-2 items-center">
-                              <p className="bg-orange-700 text-zinc-300 rounded-full p-[5px]">
-                                {item.creator.slice(0, 2)}
-                              </p>
+                  {records.length >= 1 ? (
+                    <>
+                      <Masonry
+                        breakpointCols={breakpointColumnsObj}
+                        className="my-masonry-grid "
+                        columnClassName="my-masonry-grid_column"
+                      >
+                        {/* {alert(records.length)} */}
 
-                              <p>{item.title}</p>
-                            </div>
-                            <div className="flex justify-between mb-2 items-center">
-                              <div>
-                                <p className="text-emerald-500 cursor-pointer">
-                                  #{item.category}
-                                </p>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <p>
-                                  <AiFillStar />
-                                </p>
-                                <p>{item.isVerified && "verified"}</p>
-                              </div>
-                              <div>
-                                <p className="text-emerald-500 text-xl cursor-pointer">
-                                  <AiFillHeart title="Add To Favorites" />
-                                </p>
+                        {records.map((item) => (
+                          <div
+                            key={item._id}
+                            className="bg-slate-800 rounded-lg"
+                          >
+                            <div className="image-item rounded-lg">
+                              <Link to={`/post/${item._id}`}>
+                                <img
+                                  src={item.mainPhoto}
+                                  alt=""
+                                  className="w-full rounded-md max-h-[800px] object-cover"
+                                />
+                              </Link>
+                              <div className="mt-[10px] px-[6px] pb-[10px] ">
+                                <div className="flex justify-between mb-2 items-center">
+                                  <p className="bg-orange-700 text-zinc-300 rounded-full p-[5px]">
+                                    {item.creator.slice(0, 2)}
+                                  </p>
+
+                                  <p>{item.title}</p>
+                                </div>
+                                <div className="flex justify-between mb-2 items-center">
+                                  <div>
+                                    <p className="text-emerald-500 cursor-pointer">
+                                      #{item.category}
+                                    </p>
+                                  </div>
+                                  {item.isVerified == "nope" && (
+                                    <div className="flex items-center gap-2">
+                                      <p>
+                                        <AiFillStar />
+                                      </p>
+                                      <p>verified</p>
+                                    </div>
+                                  )}
+
+                                  {user && (
+                                    <div>
+                                      <p
+                                        className="text-emerald-500 text-xl cursor-pointer"
+                                        onClick={() => handleAddFavorite(item)}
+                                      >
+                                        <AiFillHeart title="Add To Favorites" />
+                                      </p>
+                                    </div>
+                                  )}
+                                </div>
                               </div>
                             </div>
                           </div>
-                        </div>
-                      </div>
-                    ))}
-                  </Masonry>
+                        ))}
+                      </Masonry>
+                    </>
+                  ) : (
+                    <div className="flex justify-center my-[4em]">
+                      <p className="text-3xl text-zinc-300">
+                        No Trades To Show 😥
+                      </p>
+                    </div>
+                  )}
                 </>
               )}
               {/* nav numbers */}

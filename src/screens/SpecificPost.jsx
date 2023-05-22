@@ -1,11 +1,16 @@
 import Navbar from "../components/Navbar";
-import { singleProduct } from "../dummyData";
+
 import { useEffect, useState, useRef } from "react";
 import "./ImageList.css";
+import axios from "../axios";
+import { toast } from "react-toastify";
 
-// all products
-import { DummyProducts } from "../dummyData";
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
+// import { DummyProducts } from "../dummyData";
+import moment from "moment";
+import Spinner from "../components/Spinner";
+import { useSelector } from "react-redux";
+import ImageSkeleton from "../components/ImageSkeleton";
 
 const SpecificPost = () => {
   const [activeImg, setActiveImg] = useState(null);
@@ -17,6 +22,8 @@ const SpecificPost = () => {
   useEffect(() => {
     checkTheMainPhoto();
   }, []);
+
+  const { user } = useSelector((state) => state.auth);
 
   // recommendation slider
   const sliderRef = useRef(null);
@@ -46,16 +53,94 @@ const SpecificPost = () => {
       cancelAnimationFrame(animationId);
     };
 
-    slider.addEventListener("mouseenter", stopAnimation);
-    slider.addEventListener("mouseleave", startAnimation);
+    if (slider) {
+      slider.addEventListener("mouseenter", stopAnimation);
+      slider.addEventListener("mouseleave", startAnimation);
 
-    startAnimation();
+      startAnimation();
+    }
 
     return () => {
       cancelAnimationFrame(animationId);
-      slider.removeEventListener("mouseenter", stopAnimation);
-      slider.removeEventListener("mouseleave", startAnimation);
+      if (slider) {
+        slider.removeEventListener("mouseenter", stopAnimation);
+        slider.removeEventListener("mouseleave", startAnimation);
+      }
     };
+  }, []);
+
+  // fetch the post
+  const { postId } = useParams();
+  const [singlePost, setSinglePost] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  const fetchPost = async (id) => {
+    try {
+      setLoading(true);
+      let checkParam = id ? id : postId;
+      const response = await axios.get("/post/" + checkParam);
+      if (response) {
+        setLoading(false);
+        setSinglePost([response.data]);
+      }
+    } catch (error) {
+      setLoading(false);
+      toast.error("Error Fetching Product.");
+      toast.error("Network error or deosn't exist");
+    }
+  };
+
+  useEffect(() => {
+    fetchPost();
+  }, []);
+
+  // comment
+  const [comment, setComment] = useState("");
+  const [loadingComment, setLoadingComment] = useState(false);
+
+  const handleComment = async (id) => {
+    // e.preventDefault();
+    try {
+      if (!comment) {
+        toast.error("comment cannot be empty");
+        return;
+      }
+
+      setLoadingComment(true);
+
+      let username = user.username;
+      let commentData = { username, comment };
+
+      // console.log(commentData);
+      // alert(id);
+
+      await axios.post("/post/comment/" + id, commentData);
+      setLoadingComment(false);
+      setComment("");
+      await fetchPost();
+    } catch (error) {
+      setLoadingComment(false);
+      toast.error("Failed To Create Comment");
+    }
+  };
+
+  const [allPosts, setAllPosts] = useState([]);
+
+  const fetchAllPosts = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get("/post");
+      if (response) {
+        setAllPosts(response.data);
+        setLoading(false);
+      }
+    } catch (error) {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAllPosts();
   }, []);
 
   return (
@@ -65,8 +150,14 @@ const SpecificPost = () => {
         <Navbar />
       </div>
       <div>
-        {singleProduct.map((product) => (
-          <div key={product.id}>
+        {loading && (
+          <div className="my-[4em]">
+            <Spinner message="Fetching Product" />
+          </div>
+        )}
+
+        {singlePost?.map((product) => (
+          <div key={product._id}>
             <div className="flex flex-col xl:flex-row gap-[20px] items-center xl:items-start">
               {/* image side */}
               <div className=" flex-[0.3] xl:flex-[0.5]">
@@ -75,6 +166,7 @@ const SpecificPost = () => {
                   alt=""
                   className="w-full max-h-[500px] rounded-xl object-contain"
                 />
+
                 {/* small images */}
                 <div className="mt-[20px] flex gap-[10px] justify-center">
                   <img
@@ -119,14 +211,14 @@ const SpecificPost = () => {
                     <p>
                       {" "}
                       <span className="text-lg text-orange-600">@</span>{" "}
-                      {product.posted}
+                      {moment(product.createdAt).fromNow()}
                     </p>
                   </div>
                   <p className="mt-[40px]">
                     <span className="text-lg text-zinc-400">Interested ?</span>{" "}
                     :{" "}
                     <span className=" text-lg">
-                      Contact me at{" "}
+                      {" "}
                       <span className="text-emerald-500">
                         {product.contactInfo}
                       </span>
@@ -138,10 +230,11 @@ const SpecificPost = () => {
                 <div className="my-[20px]">
                   <h2 className="text-zinc-400 text-xl my-[10px]">Comments</h2>
                   {/* create comment */}
-                  <form className="">
+
+                  <form onSubmit={handleComment}>
                     <div>
                       <label htmlFor="comment" className="text-zinc-400">
-                        Comment as johndoe
+                        Comment as {user.username}
                       </label>
                     </div>
                     <div className="flex items-center pt-[20px] w-[100%]  gap-[10px] ">
@@ -158,71 +251,54 @@ const SpecificPost = () => {
                         style={{ border: "1px solid #5e5d5d" }}
                         required
                         maxLength={60}
+                        minLength={5}
+                        value={comment}
+                        onChange={(e) => setComment(e.target.value)}
                       />
-                      <p className="cursor-pointer">
-                        <span className="bg-emerald-600 p-[8px] rounded-lg">
-                          Comment
-                        </span>
+                      <p
+                        className="cursor-pointer"
+                        onClick={() => handleComment(product._id)}
+                      >
+                        {loadingComment ? (
+                          <span className="bg-orange-800 p-[8px] rounded-lg">
+                            wait..
+                          </span>
+                        ) : (
+                          <span className="bg-emerald-800 p-[8px] rounded-lg">
+                            Comment
+                          </span>
+                        )}
                       </p>
                     </div>
                   </form>
                   {/* show all comments */}
-                  <div className="mt-[30px] h-[20vh] overflow-y-scroll prompt bg-slate-800 p-[5px] rounded-lg">
-                    <div
-                      className="flex items-center gap-[20px] mb-[16px] pb-[10px]"
-                      style={{ borderBottom: "1px solid #5c5b5b" }}
-                    >
-                      <p className="">
-                        <span className="bg-orange-700 text-zinc-300 px-[10px] py-[2px] rounded-full text-md">
-                          J
-                        </span>
-                      </p>
-                      <p className="text-zinc-400">This is an awesome offer</p>
-                    </div>
-                    <div
-                      className="flex items-center gap-[20px] mb-[16px] pb-[10px]"
-                      style={{ borderBottom: "1px solid #5c5b5b" }}
-                    >
-                      <p className="">
-                        <span className="bg-orange-700 text-zinc-300 px-[10px] py-[2px] rounded-full text-md">
-                          J
-                        </span>
-                      </p>
-                      <p className="text-zinc-400">This is an awesome offer</p>
-                    </div>
-                    <div
-                      className="flex items-center gap-[20px] mb-[16px] pb-[10px]"
-                      style={{ borderBottom: "1px solid #5c5b5b" }}
-                    >
-                      <p className="">
-                        <span className="bg-orange-700 text-zinc-300 px-[10px] py-[2px] rounded-full text-md">
-                          J
-                        </span>
-                      </p>
-                      <p className="text-zinc-400">This is an awesome offer</p>
-                    </div>
-                    <div
-                      className="flex items-center gap-[20px] mb-[16px] pb-[10px]"
-                      style={{ borderBottom: "1px solid #5c5b5b" }}
-                    >
-                      <p className="">
-                        <span className="bg-orange-700 text-zinc-300 px-[10px] py-[2px] rounded-full text-md">
-                          J
-                        </span>
-                      </p>
-                      <p className="text-zinc-400">This is an awesome offer</p>
-                    </div>
-                    <div
-                      className="flex items-center gap-[20px] mb-[16px] pb-[10px]"
-                      style={{ borderBottom: "1px solid #5c5b5b" }}
-                    >
-                      <p className="">
-                        <span className="bg-orange-700 text-zinc-300 px-[10px] py-[2px] rounded-full text-md">
-                          J
-                        </span>
-                      </p>
-                      <p className="text-zinc-400">This is an awesome offer</p>
-                    </div>
+                  <div className="mt-[30px] max-h-[20vh] overflow-y-scroll prompt bg-slate-800 p-[5px] rounded-lg">
+                    {/* {console.log(product.comments)} */}
+
+                    {/* fetch comments from latest to earliest */}
+                    {product.comments.length >= 1 ? (
+                      <>
+                        {[...product.comments].reverse().map((item, index) => (
+                          <div className="" key={index}>
+                            <div
+                              className="flex items-center gap-[20px] mb-[16px] pb-[10px]"
+                              style={{ borderBottom: "1px solid #5c5b5b" }}
+                            >
+                              <p className="">
+                                <span className="text-emerald-700">
+                                  {item.username}
+                                </span>
+                              </p>
+                              <p className="text-zinc-400">{item.comment}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </>
+                    ) : (
+                      <div className="p-[10px]">
+                        <p>No Comments Yet</p>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -246,17 +322,15 @@ const SpecificPost = () => {
                     transition: "0.5s ease",
                   }}
                 >
-                  {DummyProducts.map((item) => (
-                    <div key={item.id}>
+                  {allPosts?.map((item) => (
+                    <div key={item._id}>
                       {item.category == product.category && (
-                        <div>
-                          <Link to={`/post/${item.id}`}>
-                            <img
-                              src={item.mainPhoto}
-                              style={{ flexShrink: 0, marginRight: "10px" }}
-                              className="h-[200px] w-[200px] object-cover cursor-pointer"
-                            />
-                          </Link>
+                        <div onClick={() => fetchPost(item._id)}>
+                          <img
+                            src={item.mainPhoto}
+                            style={{ flexShrink: 0, marginRight: "10px" }}
+                            className="h-[200px] w-[200px] object-cover cursor-pointer"
+                          />
                         </div>
                       )}
                     </div>

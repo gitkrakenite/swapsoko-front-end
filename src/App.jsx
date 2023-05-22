@@ -15,16 +15,34 @@ import "slick-carousel/slick/slick-theme.css";
 import "react-toastify/dist/ReactToastify.css";
 import Login from "./screens/Login";
 import Register from "./screens/Register";
+import { useState } from "react";
 
 function App() {
+  const [cartItemCount, setCartItemCount] = useState(0);
   return (
     <section className="bg-slate-900 text-zinc-300 min-h-[100vh]">
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Home />} />
+          <Route
+            path="/"
+            element={
+              <Home
+                cartItemCount={cartItemCount}
+                setCartItemCount={setCartItemCount}
+              />
+            }
+          />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          <Route path="/fav" element={<Favorites />} />
+          <Route
+            path="/fav"
+            element={
+              <Favorites
+                cartItemCount={cartItemCount}
+                setCartItemCount={setCartItemCount}
+              />
+            }
+          />
           <Route path="/create" element={<Create />} />
           <Route path="/post/:postId" element={<SpecificPost />} />
           <Route path="/user/:username" element={<UserProfile />} />
