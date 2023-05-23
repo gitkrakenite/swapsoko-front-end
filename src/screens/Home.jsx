@@ -1,4 +1,5 @@
 import Feed from "../components/Feed";
+// import Hero from "../components/Hero";
 import Navbar from "../components/Navbar";
 
 const Home = ({ cartItemCount, setCartItemCount }) => {
@@ -10,6 +11,7 @@ const Home = ({ cartItemCount, setCartItemCount }) => {
         <div>
           <Navbar cartItemCount={cartItemCount} />
         </div>
+        <div></div>
         <div>
           <Feed setCartItemCount={setCartItemCount} />
         </div>

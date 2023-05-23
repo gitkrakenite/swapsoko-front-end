@@ -21,6 +21,7 @@ import Spinner from "./Spinner";
 import axios from "../axios";
 import { toast } from "react-toastify";
 import { useSelector } from "react-redux";
+import Hero from "./Hero";
 
 const Feed = ({ setCartItemCount }) => {
   const breakpointColumnsObj = {
@@ -168,6 +169,14 @@ const Feed = ({ setCartItemCount }) => {
     return;
   };
 
+  useEffect(() => {
+    if (navigator.onLine) {
+      console.log("online");
+    } else {
+      toast.error("Network Error");
+    }
+  }, []);
+
   return (
     <div className="relative pb-[2em]">
       {/* wrapper */}
@@ -182,24 +191,37 @@ const Feed = ({ setCartItemCount }) => {
             <AiOutlineArrowUp />
           </div>
         )}
+
+        {!searchText && <Hero />}
+
         {/* search form */}
-        <div className=" w-[99%] sm:w-[94%] md:w-[85%] lg:w-[75%] xl:w-[60%] 2xl:w-[50%] flex justify-center m-auto pb-[30px]">
-          <form className="w-full">
-            <div
-              className="flex items-center gap-[10px] w-[100%] rounded-lg"
-              style={{ border: "1px solid #ccc", padding: "6px" }}
-            >
-              <AiOutlineSearch className="text-2xl text-zinc-300" />
-              <input
-                type="text"
-                placeholder="Search products, trader and categories"
-                className="bg-transparent w-full outline-none border-none"
-                required
-                value={searchText}
-                onChange={handleSearchChange}
-              />
-            </div>
-          </form>
+        <div className=" w-[99%] sm:w-[94%] md:w-[85%] lg:w-[75%] xl:w-[60%] 2xl:w-[50%] block md:flex justify-center m-auto pb-[30px] gap-[40px] items-center">
+          <div className="flex-[4]">
+            <form className="w-full">
+              <div
+                className="flex items-center gap-[10px] w-[100%] rounded-lg"
+                style={{ border: "1px solid #ccc", padding: "6px" }}
+              >
+                <AiOutlineSearch className="text-2xl text-zinc-300" />
+                <input
+                  type="text"
+                  placeholder="Search products, trader and categories"
+                  className="bg-transparent w-full outline-none border-none"
+                  required
+                  value={searchText}
+                  onChange={handleSearchChange}
+                />
+              </div>
+            </form>
+          </div>
+
+          <div className="flex-[1]">
+            <Link to="/advanced">
+              <p className="text-emerald-600 underline mt-[20px] md:mt-0 text-lg">
+                Advanced
+              </p>
+            </Link>
+          </div>
         </div>
         {/* wrapper for hero and filters */}
         <div className="">

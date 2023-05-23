@@ -192,7 +192,9 @@ const Create = () => {
         navigate("/");
       } catch (error) {
         setLoading(false);
-        toast.error("Action Failed. Check Network");
+        toast.error(
+          "Click Again To Confirm. If not redirected then check network"
+        );
       }
     }
   };

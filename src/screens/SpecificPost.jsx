@@ -102,7 +102,7 @@ const SpecificPost = () => {
     // e.preventDefault();
     try {
       if (!comment) {
-        toast.error("comment cannot be empty");
+        toast.error("bid cannot be empty");
         return;
       }
 
@@ -216,7 +216,6 @@ const SpecificPost = () => {
                   </div>
                   <p className="mt-[40px]">
                     <span className="text-lg text-zinc-400">Interested ?</span>{" "}
-                    :{" "}
                     <span className=" text-lg">
                       {" "}
                       <span className="text-emerald-500">
@@ -228,49 +227,54 @@ const SpecificPost = () => {
 
                 {/* comments */}
                 <div className="my-[20px]">
-                  <h2 className="text-zinc-400 text-xl my-[10px]">Comments</h2>
+                  <h2 className="text-zinc-400 text-xl my-[10px]">
+                    All Active Bids
+                  </h2>
                   {/* create comment */}
 
-                  <form onSubmit={handleComment}>
-                    <div>
-                      <label htmlFor="comment" className="text-zinc-400">
-                        Comment as {user.username}
-                      </label>
-                    </div>
-                    <div className="flex items-center pt-[20px] w-[100%]  gap-[10px] ">
-                      <p className=" hidden md:flex">
-                        <span className="bg-orange-700 text-zinc-300 px-[10px] py-[2px] rounded-full text-2xl">
-                          J
-                        </span>
-                      </p>
-                      <input
-                        type="text"
-                        id="comment"
-                        placeholder="Enter your comment"
-                        className="w-[100%] bg-transparent p-[8px] outline-none border-none rounded-md"
-                        style={{ border: "1px solid #5e5d5d" }}
-                        required
-                        maxLength={60}
-                        minLength={5}
-                        value={comment}
-                        onChange={(e) => setComment(e.target.value)}
-                      />
-                      <p
-                        className="cursor-pointer"
-                        onClick={() => handleComment(product._id)}
-                      >
-                        {loadingComment ? (
-                          <span className="bg-orange-800 p-[8px] rounded-lg">
-                            wait..
+                  {user && (
+                    <form onSubmit={handleComment}>
+                      <div>
+                        <label htmlFor="comment" className="text-zinc-400">
+                          Create a bid as {user?.username}
+                        </label>
+                      </div>
+                      <div className="flex items-center pt-[20px] w-[100%]  gap-[10px] ">
+                        <p className=" hidden md:flex">
+                          <span className="bg-orange-700 text-zinc-300 px-[10px] py-[2px] rounded-full text-2xl">
+                            J
                           </span>
-                        ) : (
-                          <span className="bg-emerald-800 p-[8px] rounded-lg">
-                            Comment
-                          </span>
-                        )}
-                      </p>
-                    </div>
-                  </form>
+                        </p>
+                        <input
+                          type="text"
+                          id="comment"
+                          placeholder={`create bid for ${product.title}`}
+                          className="w-[100%] bg-transparent p-[8px] outline-none border-none rounded-md"
+                          style={{ border: "1px solid #5e5d5d" }}
+                          required
+                          maxLength={60}
+                          minLength={5}
+                          value={comment}
+                          onChange={(e) => setComment(e.target.value)}
+                        />
+                        <p
+                          className="cursor-pointer"
+                          onClick={() => handleComment(product._id)}
+                        >
+                          {loadingComment ? (
+                            <span className="bg-orange-800 p-[8px] rounded-lg">
+                              bidding..
+                            </span>
+                          ) : (
+                            <span className="bg-emerald-800 p-[8px] rounded-lg">
+                              Bid
+                            </span>
+                          )}
+                        </p>
+                      </div>
+                    </form>
+                  )}
+
                   {/* show all comments */}
                   <div className="mt-[30px] max-h-[20vh] overflow-y-scroll prompt bg-slate-800 p-[5px] rounded-lg">
                     {/* {console.log(product.comments)} */}
@@ -291,6 +295,7 @@ const SpecificPost = () => {
                               </p>
                               <p className="text-zinc-400">{item.comment}</p>
                             </div>
+                            {console.log(item)}
                           </div>
                         ))}
                       </>

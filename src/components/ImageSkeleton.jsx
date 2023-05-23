@@ -1,4 +1,5 @@
 import "./imgSkeleton.css";
+
 const ImageSkeleton = () => {
   return (
     <div>

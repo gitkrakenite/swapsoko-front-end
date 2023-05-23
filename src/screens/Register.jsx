@@ -25,6 +25,12 @@ const Register = () => {
   );
 
   useEffect(() => {
+    if (navigator.onLine) {
+      console.log("online");
+    } else {
+      toast.error("Network Error");
+    }
+
     if (isError) {
       toast.error("Action Failed");
     }
@@ -36,6 +42,8 @@ const Register = () => {
 
     dispatch(reset());
   }, [user, isError, isSuccess, message, navigate, dispatch]);
+
+  const [loading, setLoading] = useState(false);
 
   const handleRegister = async (e) => {
     e.preventDefault();
@@ -50,6 +58,7 @@ const Register = () => {
     } else if (password !== cpassword) {
       return toast.error("passwords don't match");
     } else {
+      setLoading(true);
       // check whether username already exists
       const nameToCheck = { username };
       const { data } = await axios.post("/user/check", nameToCheck);
@@ -58,9 +67,11 @@ const Register = () => {
         // alert("proceed");
         const userData = { username, email, phone, password };
         dispatch(register(userData));
+        setLoading(false);
         return;
       } else {
         toast.error(`username ${username} exists.`);
+        setLoading(false);
         return;
       }
 

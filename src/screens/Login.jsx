@@ -38,15 +38,20 @@ const Login = () => {
     dispatch(reset());
   }, [user, isError, isSuccess, message, isLoading, navigate, dispatch]);
 
+  const [loading, setLoading] = useState(false);
+
   const handleLogin = (e) => {
     e.preventDefault();
+
     if (!username) {
       return toast.error("username missing");
     } else if (!password) {
       return toast.error("password missing");
     } else {
+      setLoading(true);
       const userData = { username, password };
       dispatch(login(userData));
+      setLoading(false);
     }
   };
 
@@ -126,8 +131,8 @@ const Login = () => {
               </div>
             </div>
 
-            {isLoading ? (
-              <Spinner message="Signin you in .." />
+            {loading ? (
+              <Spinner message="logging you in .." />
             ) : (
               <button
                 className="mb-[20px] w-full bg-emerald-700 text-zinc-300 p-[10px] rounded-xl"

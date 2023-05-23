@@ -16,9 +16,13 @@ import "react-toastify/dist/ReactToastify.css";
 import Login from "./screens/Login";
 import Register from "./screens/Register";
 import { useState } from "react";
+import Advanced from "./screens/Advanced";
 
 function App() {
   const [cartItemCount, setCartItemCount] = useState(0);
+
+  const [isLoading, setIsLoading] = useState(true);
+
   return (
     <section className="bg-slate-900 text-zinc-300 min-h-[100vh]">
       <BrowserRouter>
@@ -47,8 +51,10 @@ function App() {
           <Route path="/post/:postId" element={<SpecificPost />} />
           <Route path="/user/:username" element={<UserProfile />} />
           <Route path="/my-profile" element={<MyProfile />} />
+          <Route path="/advanced" element={<Advanced />} />
         </Routes>
       </BrowserRouter>
+
       <ToastContainer />
     </section>
   );
