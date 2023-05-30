@@ -10,7 +10,6 @@ import axios from "../axios";
 
 const Register = () => {
   const [username, setUsername] = useState("");
-  const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [cpassword, setCpassword] = useState("");
@@ -20,7 +19,7 @@ const Register = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  const { user, isLoading, isError, isSuccess, message } = useSelector(
+  const { user, isError, isSuccess, message } = useSelector(
     (state) => state.auth
   );
 
@@ -32,7 +31,8 @@ const Register = () => {
     }
 
     if (isError) {
-      toast.error("Action Failed");
+      // toast.error("Please Check Login Details");
+      toast.error("Please Check Network");
     }
 
     if (isSuccess || user) {
@@ -51,8 +51,6 @@ const Register = () => {
       return toast.error("username missing");
     } else if (!phone) {
       return toast.error("phone number missing");
-    } else if (!email) {
-      return toast.error("email missing");
     } else if (!password) {
       return toast.error("password missing");
     } else if (password !== cpassword) {
@@ -65,7 +63,7 @@ const Register = () => {
 
       if (data == "not exist") {
         // alert("proceed");
-        const userData = { username, email, phone, password };
+        const userData = { username, phone, password };
         dispatch(register(userData));
         setLoading(false);
         return;
@@ -134,24 +132,7 @@ const Register = () => {
                 onChange={(e) => setPhone(e.target.value)}
               />
             </div>
-            {/*  */}
-            <div className="flex flex-col gap-[15px] mb-[22px]">
-              <label htmlFor="email" className="text-zinc-400 text-lg">
-                Enter Your Email
-              </label>
-              <input
-                type="email"
-                id="email"
-                placeholder="i.e johndoe@gmail.com"
-                className="bg-transparent p-[8px] rounded-lg"
-                style={{ border: "1px solid #4d4c4c" }}
-                required
-                minLength={5}
-                maxLength={30}
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </div>
+
             {/*  */}
             <div className=" mb-[22px]">
               <label
@@ -230,7 +211,7 @@ const Register = () => {
               </div>
             </div>
 
-            {isLoading ? (
+            {loading ? (
               <Spinner message="Creating Account ..." />
             ) : (
               <button
@@ -241,12 +222,20 @@ const Register = () => {
                 Create Account
               </button>
             )}
-            <p className="mt-[15px] text-zinc-400">
-              Not New Here ?{" "}
-              <Link to="/login">
-                <span className="text-emerald-600 underline">Sign in</span>
-              </Link>{" "}
-            </p>
+            <div className="block md:flex justify-between">
+              <p className="mt-[15px] text-zinc-400">
+                Not New Here ?{" "}
+                <Link to="/login">
+                  <span className="text-emerald-600 underline">Sign in</span>
+                </Link>{" "}
+              </p>
+              <p className="mt-[15px] text-zinc-400">
+                Contact Admin ?{" "}
+                <a href="mailto:daysseller@gmail.com">
+                  <span className="text-emerald-600 underline">Click Here</span>
+                </a>
+              </p>
+            </div>
           </form>
         </div>
       </div>

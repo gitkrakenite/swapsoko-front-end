@@ -8,9 +8,7 @@ const Home = ({ cartItemCount, setCartItemCount }) => {
       {/* wrapper */}
       <div>
         {/* navbar */}
-        <div>
-          <Navbar cartItemCount={cartItemCount} />
-        </div>
+        <div>{/* <Navbar cartItemCount={cartItemCount} /> */}</div>
         <div></div>
         <div>
           <Feed setCartItemCount={setCartItemCount} />

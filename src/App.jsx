@@ -17,11 +17,10 @@ import Login from "./screens/Login";
 import Register from "./screens/Register";
 import { useState } from "react";
 import Advanced from "./screens/Advanced";
+import Notification from "./screens/Notification";
 
 function App() {
   const [cartItemCount, setCartItemCount] = useState(0);
-
-  const [isLoading, setIsLoading] = useState(true);
 
   return (
     <section className="bg-slate-900 text-zinc-300 min-h-[100vh]">
@@ -52,6 +51,7 @@ function App() {
           <Route path="/user/:username" element={<UserProfile />} />
           <Route path="/my-profile" element={<MyProfile />} />
           <Route path="/advanced" element={<Advanced />} />
+          <Route path="/notifications" element={<Notification />} />
         </Routes>
       </BrowserRouter>
 

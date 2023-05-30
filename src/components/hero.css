@@ -1,0 +1,33 @@
+.image-scroller {
+  width: 100%;
+  /* overflow: hidden; */
+  overflow-x: scroll;
+}
+
+.image-scroller-wrapper {
+  display: flex;
+  transition: transform 0.5s ease;
+}
+
+.image-scroller-item {
+  flex: 0 0 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.image-scroller-item:not(:first-child) {
+  margin-left: 10px; /* Adjust the spacing between images */
+}
+
+.image-scroller-item img {
+  max-width: 100%;
+  height: auto;
+  object-fit: cover;
+  /* height: auto; */
+  display: block;
+}
+
+.image-scroller-item.active {
+  flex: 0 0 100%; /* Expand the active item to fill the container */
+}

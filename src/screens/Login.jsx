@@ -21,7 +21,8 @@ const Login = () => {
 
   useEffect(() => {
     if (isError) {
-      toast.error("Action Failed. Check Network or Login Details");
+      toast.error("Please Check Login Details");
+      toast.error("Also Check Network");
     }
 
     if (user || isSuccess) {
@@ -131,7 +132,7 @@ const Login = () => {
               </div>
             </div>
 
-            {loading ? (
+            {loading || isLoading ? (
               <Spinner message="logging you in .." />
             ) : (
               <button
@@ -142,14 +143,22 @@ const Login = () => {
                 Sign In
               </button>
             )}
-            <p className="mt-[15px] text-zinc-400">
-              Are You New Here ?{" "}
-              <Link to="/register">
-                <span className="text-emerald-600 underline">
-                  Create Account
-                </span>
-              </Link>{" "}
-            </p>
+            <div className="block md:flex justify-between">
+              <p className="mt-[15px] text-zinc-400">
+                New Here ?{" "}
+                <Link to="/register">
+                  <span className="text-emerald-600 underline">
+                    Create Account
+                  </span>
+                </Link>{" "}
+              </p>
+              <p className="mt-[15px] text-zinc-400">
+                Contact Admin ?{" "}
+                <a href="mailto:daysseller@gmail.com">
+                  <span className="text-emerald-600 underline">Click Here</span>
+                </a>
+              </p>
+            </div>
           </form>
         </div>
       </div>

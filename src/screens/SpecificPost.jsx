@@ -5,12 +5,11 @@ import "./ImageList.css";
 import axios from "../axios";
 import { toast } from "react-toastify";
 
-import { Link, useParams } from "react-router-dom";
+import { Link, useLocation, useParams } from "react-router-dom";
 // import { DummyProducts } from "../dummyData";
 import moment from "moment";
 import Spinner from "../components/Spinner";
 import { useSelector } from "react-redux";
-import ImageSkeleton from "../components/ImageSkeleton";
 
 const SpecificPost = () => {
   const [activeImg, setActiveImg] = useState(null);
@@ -77,6 +76,7 @@ const SpecificPost = () => {
   const fetchPost = async (id) => {
     try {
       setLoading(true);
+
       let checkParam = id ? id : postId;
       const response = await axios.get("/post/" + checkParam);
       if (response) {
@@ -86,7 +86,7 @@ const SpecificPost = () => {
     } catch (error) {
       setLoading(false);
       toast.error("Error Fetching Product.");
-      toast.error("Network error or deosn't exist");
+      toast.error("Network error or doesn't exist");
     }
   };
 
@@ -98,8 +98,7 @@ const SpecificPost = () => {
   const [comment, setComment] = useState("");
   const [loadingComment, setLoadingComment] = useState(false);
 
-  const handleComment = async (id) => {
-    // e.preventDefault();
+  const handleComment = async (product) => {
     try {
       if (!comment) {
         toast.error("bid cannot be empty");
@@ -109,15 +108,29 @@ const SpecificPost = () => {
       setLoadingComment(true);
 
       let username = user.username;
+      let id = product._id;
       let commentData = { username, comment };
-
-      // console.log(commentData);
-      // alert(id);
 
       await axios.post("/post/comment/" + id, commentData);
       setLoadingComment(false);
       setComment("");
       await fetchPost();
+
+      //Now create notification
+      let author = user.username;
+      let productTitle = product.title;
+      let productId = product._id;
+      let content = comment;
+      let recipient = product.creator;
+      let notificationData = {
+        author,
+        productTitle,
+        productId,
+        content,
+        recipient,
+      };
+
+      await axios.post("/notify", notificationData);
     } catch (error) {
       setLoadingComment(false);
       toast.error("Failed To Create Comment");
@@ -232,47 +245,83 @@ const SpecificPost = () => {
                   </h2>
                   {/* create comment */}
 
+                  {!user && (
+                    <p className="text-orange-300 text-lg">
+                      You need an account to create a bid
+                    </p>
+                  )}
+
                   {user && (
-                    <form onSubmit={handleComment}>
-                      <div>
-                        <label htmlFor="comment" className="text-zinc-400">
-                          Create a bid as {user?.username}
-                        </label>
-                      </div>
-                      <div className="flex items-center pt-[20px] w-[100%]  gap-[10px] ">
-                        <p className=" hidden md:flex">
-                          <span className="bg-orange-700 text-zinc-300 px-[10px] py-[2px] rounded-full text-2xl">
-                            J
-                          </span>
-                        </p>
-                        <input
-                          type="text"
-                          id="comment"
-                          placeholder={`create bid for ${product.title}`}
-                          className="w-[100%] bg-transparent p-[8px] outline-none border-none rounded-md"
-                          style={{ border: "1px solid #5e5d5d" }}
-                          required
-                          maxLength={60}
-                          minLength={5}
-                          value={comment}
-                          onChange={(e) => setComment(e.target.value)}
-                        />
-                        <p
-                          className="cursor-pointer"
-                          onClick={() => handleComment(product._id)}
-                        >
-                          {loadingComment ? (
-                            <span className="bg-orange-800 p-[8px] rounded-lg">
-                              bidding..
+                    <>
+                      <form onSubmit={() => handleComment(product)}>
+                        <div>
+                          <label htmlFor="comment" className="text-zinc-400">
+                            {user?.username == product.creator ? (
+                              <div className="text-orange-400 ">
+                                Reply To Bids
+                              </div>
+                            ) : (
+                              <>
+                                Create a bid and add{" "}
+                                <span className="text-orange-300">
+                                  your number
+                                </span>
+                              </>
+                            )}
+
+                            {user?.username == product.creator ? (
+                              <p className="mt-[10px]">
+                                If You like a bid you can ask the bidder for
+                                contact info
+                              </p>
+                            ) : (
+                              <p className="mt-[10px]">
+                                ** If you win, the owner will call you **
+                              </p>
+                            )}
+                          </label>
+                        </div>
+                        <div className="flex items-center pt-[20px] w-[100%]  gap-[10px] ">
+                          <p className=" hidden md:flex">
+                            <span className="bg-orange-700 text-zinc-300 px-2 py-3 rounded-full text-2xl flex items-center justify-center w-10 h-10">
+                              {user?.username.slice(0, 1)}
                             </span>
-                          ) : (
-                            <span className="bg-emerald-800 p-[8px] rounded-lg">
-                              Bid
-                            </span>
-                          )}
-                        </p>
-                      </div>
-                    </form>
+                          </p>
+                          <input
+                            type="text"
+                            id="comment"
+                            placeholder={
+                              user?.username == product.creator
+                                ? "reply to any bid"
+                                : `create bid for ${product.title}`
+                            }
+                            className="w-[100%] bg-transparent p-[8px] outline-none border-none rounded-md"
+                            style={{ border: "1px solid #5e5d5d" }}
+                            required
+                            maxLength={120}
+                            minLength={5}
+                            value={comment}
+                            onChange={(e) => setComment(e.target.value)}
+                          />
+                          <p
+                            className="cursor-pointer"
+                            onClick={() => handleComment(product)}
+                          >
+                            {loadingComment ? (
+                              <span className="bg-orange-800 p-[8px] rounded-lg">
+                                bidding..
+                              </span>
+                            ) : (
+                              <span className="bg-emerald-800 p-[8px] rounded-lg">
+                                {user?.username == product.creator
+                                  ? "reply"
+                                  : `Bid`}
+                              </span>
+                            )}
+                          </p>
+                        </div>
+                      </form>
+                    </>
                   )}
 
                   {/* show all comments */}
@@ -285,7 +334,7 @@ const SpecificPost = () => {
                         {[...product.comments].reverse().map((item, index) => (
                           <div className="" key={index}>
                             <div
-                              className="flex items-center gap-[20px] mb-[16px] pb-[10px]"
+                              className=" block md:flex items-center gap-[20px] mb-[16px] pb-[10px]"
                               style={{ borderBottom: "1px solid #5c5b5b" }}
                             >
                               <p className="">
@@ -295,23 +344,31 @@ const SpecificPost = () => {
                               </p>
                               <p className="text-zinc-400">{item.comment}</p>
                             </div>
-                            {console.log(item)}
                           </div>
                         ))}
                       </>
                     ) : (
-                      <div className="p-[10px]">
-                        <p>No Comments Yet</p>
+                      <div className="p-[10px] text-gray-400">
+                        <p>
+                          No Bids for{" "}
+                          <span className="text-gray-200">
+                            {product?.title}
+                          </span>{" "}
+                          Yet
+                        </p>
                       </div>
                     )}
                   </div>
                 </div>
               </div>
             </div>
+
             {/* recommended */}
 
             <div className="mt-[20px] pb-[20px]">
-              <h2 className="mb-[20px] text-xl">Recommended</h2>
+              <h2 className="mb-[20px] text-xl text-zinc-400">
+                Recommendation Section
+              </h2>
 
               <div
                 ref={sliderRef}
@@ -330,13 +387,23 @@ const SpecificPost = () => {
                   {allPosts?.map((item) => (
                     <div key={item._id}>
                       {item.category == product.category && (
-                        <div onClick={() => fetchPost(item._id)}>
-                          <img
-                            src={item.mainPhoto}
-                            style={{ flexShrink: 0, marginRight: "10px" }}
-                            className="h-[200px] w-[200px] object-cover cursor-pointer"
-                          />
-                        </div>
+                        <>
+                          {item.title !== product.title && (
+                            <div onClick={() => fetchPost(item._id)}>
+                              <img
+                                src={item.mainPhoto}
+                                style={{ flexShrink: 0, marginRight: "10px" }}
+                                className="h-[200px] w-[200px] object-cover cursor-pointer"
+                                onClick={() => {
+                                  window.scrollTo({
+                                    top: 0,
+                                    behavior: "smooth", // Optional: Enables smooth scrolling
+                                  });
+                                }}
+                              />
+                            </div>
+                          )}
+                        </>
                       )}
                     </div>
                   ))}

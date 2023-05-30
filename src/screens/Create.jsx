@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Spinner from "../components/Spinner";
 import { toast } from "react-toastify";
@@ -136,6 +136,12 @@ const Create = () => {
   };
 
   const navigate = useNavigate();
+  useEffect(() => {
+    if (!user) {
+      navigate("/login");
+      toast.error("You need an account to trade");
+    }
+  }, [user, navigate]);
 
   const handleCreateTrade = async (e) => {
     e.preventDefault();

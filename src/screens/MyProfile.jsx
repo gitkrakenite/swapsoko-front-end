@@ -27,6 +27,13 @@ const MyProfile = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
+  useEffect(() => {
+    if (!user) {
+      navigate("/login");
+      toast.error("You Need An Account For This");
+    }
+  }, [user]);
+
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -268,7 +275,6 @@ const MyProfile = () => {
         <section className=" w-[98%] md:w-[70%] bg-slate-700 px-[2em] py-[2em] m-auto rounded-md">
           <div key={user?.username}>
             <p className="mb-[10px]">username : {user?.username}</p>
-            <p>email : {user?.email} </p>
             <p>phone : {user?.phone} </p>
 
             {/* <div className="mt-[30px] flex justify-end">

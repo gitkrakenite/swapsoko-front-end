@@ -80,10 +80,10 @@ const Favorites = ({ setCartItemCount }) => {
   const navigate = useNavigate();
   useEffect(() => {
     if (!user) {
-      navigate("/");
+      navigate("/login");
       toast.error("You Need An Account For This");
     }
-  }, [user, navigate]);
+  }, [user]);
 
   return (
     <div className=" px-[10px] sm:px-[3em] pt-3">
@@ -109,7 +109,7 @@ const Favorites = ({ setCartItemCount }) => {
       {/* show my Favorites */}
       <div className="mt-[30px]">
         <p className="mb-[20px] text-lg text-zinc-400">Favorite Trades</p>
-        {console.log(favorites)}
+        {/* {console.log(favorites)} */}
         <div>
           {favorites?.length >= 1 ? (
             <>
