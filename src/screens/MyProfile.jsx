@@ -6,10 +6,8 @@ import {
   AiOutlineArrowLeft,
   AiOutlineArrowUp,
   AiOutlineDelete,
-  AiOutlineEye,
-  AiOutlineEyeInvisible,
 } from "react-icons/ai";
-// import { BsPenFill } from "react-icons/bs";
+import { BsPenFill } from "react-icons/bs";
 import Masonry from "react-masonry-css";
 import { useDispatch, useSelector } from "react-redux";
 import axios from "../axios";
@@ -34,19 +32,14 @@ const MyProfile = () => {
     }
   }, [user]);
 
-  const [username, setUsername] = useState("");
-  const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
-  const [password, setPassword] = useState("");
 
   // update fields
-  const [updateusername, setUpdateusername] = useState("");
-  const [updateEmail, setUpdateEmail] = useState("");
+  const [updatePhone, setUpdatePhone] = useState("");
 
   useEffect(() => {
-    setUsername(updateusername);
-    setEmail(updateEmail);
-  }, [updateusername, updateEmail]);
+    setPhone(updatePhone);
+  }, [updatePhone]);
 
   const breakpointColumnsObj = {
     default: 4,
@@ -84,20 +77,6 @@ const MyProfile = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const handleUpdateUsername = async () => {
-    const nameToCheck = { username };
-    const { data } = await axios.post("/user/check", nameToCheck);
-
-    if (data == "not exist") {
-      alert("proceed");
-      // const userData = { username };
-      // dispatch(register(userData));
-      return;
-    } else {
-      toast.error(`username ${username} exists.`);
-      return;
-    }
-  };
   //
 
   // fetch my products
@@ -124,9 +103,28 @@ const MyProfile = () => {
     fetchMyProducts();
   }, []);
 
-  const handleUpdateOther = (e) => {
+  const handleUpdateOther = async (e) => {
     e.preventDefault();
-    alert("updates");
+
+    if (!phone) {
+      return toast.error("Phone number needed");
+    }
+
+    let isConfirm = confirm("Are you sure you want to update phone ?");
+    if (isConfirm) {
+      try {
+        let dataToSend = { phone: phone };
+        let myId = user?._id;
+        const response = await axios.put("/user/update/" + myId, dataToSend);
+        if (response) {
+          toast.success("Updated Phone Number");
+          await handleLogout();
+          console.log(response.data);
+        }
+      } catch (error) {
+        toast.error("Failed To Update Account");
+      }
+    }
   };
   const handleLogout = () => {
     dispatch(logout());
@@ -139,6 +137,7 @@ const MyProfile = () => {
       try {
         await axios.delete("/post/" + id);
         toast.success("deleted trade");
+        await fetchMyProducts();
       } catch (error) {
         toast.error("Action Failed. Check Network");
       }
@@ -169,106 +168,50 @@ const MyProfile = () => {
 
       {showUpdate ? (
         <>
+          <div className="mb-[20px]">
+            <AiOutlineArrowLeft
+              className="text-3xl text-orange-700 cursor-pointer"
+              onClick={() => setShowUpdate(false)}
+            />
+          </div>
+
           <form className=" w-[98%] md:w-[60%] m-auto">
-            <div className="mb-[20px]">
-              <AiOutlineArrowLeft
-                className="text-3xl text-orange-700 cursor-pointer"
-                onClick={() => setShowUpdate(false)}
+            <div className="flex flex-col gap-[15px] mb-[15px]">
+              <label htmlFor="phone" className="text-zinc-500">
+                Update Phone
+                <p className="text-orange-200">
+                  ** This is the number traders will use to reach out **
+                </p>
+              </label>
+              <input
+                type="phone"
+                placeholder="New Phone Number"
+                minLength={4}
+                maxLength={20}
+                id="email"
+                className="bg-transparent p-[5px] rounded-md outline-none"
+                style={{ border: "1px solid #4e4d4d" }}
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
               />
             </div>
 
-            {showMore ? (
-              <>
-                <div className="flex flex-col gap-[15px] mb-[15px]">
-                  <label htmlFor="email" className="text-zinc-500">
-                    Update Email
-                  </label>
-                  <input
-                    type="email"
-                    placeholder="New Email"
-                    minLength={4}
-                    maxLength={20}
-                    id="email"
-                    className="bg-transparent p-[5px] rounded-md outline-none"
-                    style={{ border: "1px solid #4e4d4d" }}
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                  />
-                </div>
-                <div className="flex items-center gap-[15px] mt-[35px]">
-                  <div className="flex flex-col gap-[15px] flex-[0.9]">
-                    <label htmlFor="password" className="text-zinc-500">
-                      Update Password
-                    </label>
-                    <input
-                      type={showPass ? "text" : "password"}
-                      placeholder="New Password"
-                      minLength={8}
-                      maxLength={25}
-                      id="password"
-                      className="bg-transparent p-[5px] rounded-md outline-none"
-                      style={{ border: "1px solid #4e4d4d" }}
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                    />
-                  </div>
-                  <div className="flex-[0.1]">
-                    {showPass ? (
-                      <AiOutlineEyeInvisible
-                        className="text-2xl cursor-pointer mt-[30px]"
-                        onClick={() => setShowPass(false)}
-                      />
-                    ) : (
-                      <AiOutlineEye
-                        className="text-2xl cursor-pointer mt-[30px]"
-                        onClick={() => setShowPass(true)}
-                      />
-                    )}
-                  </div>
-                </div>
-                <div className="flex justify-center mt-[35px]">
-                  <button
-                    className="bg-emerald-900 text-zinc-300 px-[20px] py-[15px] rounded-xl"
-                    onClick={handleUpdateOther}
-                  >
-                    Update Details ?
-                  </button>
-                </div>
-              </>
-            ) : (
-              <>
-                <div className="flex flex-col gap-[15px] mb-[35px]">
-                  <label htmlFor="username" className="text-zinc-500">
-                    Update Username
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="New Username"
-                    minLength={4}
-                    maxLength={15}
-                    id="username"
-                    className="bg-transparent p-[5px] rounded-md outline-none"
-                    style={{ border: "1px solid #4e4d4d" }}
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                  />
-                </div>
-                <div className="flex justify-between w-[100%] items-center">
-                  <p
-                    className="bg-emerald-900 p-[5px] rounded-lg cursor-pointer"
-                    onClick={handleUpdateUsername}
-                  >
-                    Update Username
-                  </p>
-                  <p
-                    className="underline text-zinc-500 hover:text-zinc-300 text-lg cursor-pointer"
-                    onClick={() => setShowMore(true)}
-                  >
-                    Update Other
-                  </p>
-                </div>
-              </>
-            )}
+            <div className="flex justify-center mt-[35px]">
+              <div>
+                <button
+                  className="bg-emerald-900 text-zinc-300 px-[20px] py-[15px] rounded-xl"
+                  onClick={handleUpdateOther}
+                >
+                  Update Phone ?
+                </button>
+                <p
+                  className="text-orange-200 my-[1em] text-lg cursor-pointer"
+                  onClick={() => setShowUpdate(false)}
+                >
+                  Close Update Form
+                </p>
+              </div>
+            </div>
           </form>
         </>
       ) : (
@@ -277,17 +220,16 @@ const MyProfile = () => {
             <p className="mb-[10px]">username : {user?.username}</p>
             <p>phone : {user?.phone} </p>
 
-            {/* <div className="mt-[30px] flex justify-end">
+            <div className="mt-[30px] flex justify-end">
               <BsPenFill
-                className="text-emerald-400 text-xl cursor-pointer"
+                className="text-emerald-400 text-2xl cursor-pointer"
                 onClick={() => {
                   setShowUpdate(true);
-
-                  setUpdateusername(user?.username);
-                  setUpdateEmail(user?.email);
+                  setUpdatePhone(user?.phone);
                 }}
+                title="Update Phone"
               />
-            </div> */}
+            </div>
             {/* logout */}
             <div className="mt-[20px]">
               <button

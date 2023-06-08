@@ -192,12 +192,13 @@ const Create = () => {
           thirdPhoto,
           contactInfo,
         };
-        const response = await axios.post("/post", postData);
+        await axios.post("/post", postData);
         setLoading(false);
         toast.success(`Trade for ${title} created`);
         navigate("/");
       } catch (error) {
         setLoading(false);
+        window.alert("Click create again to confirm");
         toast.error(
           "Click Again To Confirm. If not redirected then check network"
         );

@@ -51,9 +51,15 @@ const Navbar = ({ cartItemCount }) => {
       {/* desktop wrapper */}
       <div className="flex justify-between items-center pt-[10px] gap-[20px] flex-wrap">
         {/* logo */}
-        <div>
+        <div
+          className="flex gap-[25px] justify-between 
+         w-full sm:w-0 items-center"
+        >
           <Link to="/" className="no-underline">
             <h2 className="text-zinc-300 text-xl">SWAPSOKO</h2>
+          </Link>
+          <Link to="/about" className="">
+            <h2 className="text-emerald-500 hover:underline text-xl">About</h2>
           </Link>
         </div>
         {/* links */}

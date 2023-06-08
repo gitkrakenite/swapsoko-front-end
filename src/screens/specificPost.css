@@ -1,0 +1,90 @@
+/* CSS */
+
+/* Styling for the pop-up page */
+.pop-up-page {
+  position: fixed;
+  /* top: 52%;
+    left: 50%; */
+  height: 80vh;
+  width: 40%;
+  margin: auto;
+  /* transform: translate(-50%, -50%); */
+  background-color: rgb(17, 16, 16);
+  border-radius: 10%;
+  padding: 10px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  z-index: 9999;
+}
+
+/* Styling for the overlay */
+.pop-up-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+@media (max-width: 950px) {
+  .pop-up-page {
+    height: 50vh;
+    width: 90%;
+    margin: auto;
+  }
+}
+
+@media (max-width: 830px) {
+  .pop-up-page {
+    height: 40vh;
+    width: 90%;
+    margin: auto;
+  }
+}
+
+@media (max-width: 600px) {
+  .pop-up-page {
+    height: 60vh;
+    width: 90%;
+    margin: auto;
+  }
+}
+
+@media (max-width: 500px) {
+  .pop-up-page {
+    margin-top: 4em;
+    height: 50vh;
+    width: 100%;
+    /* margin: auto; */
+  }
+}
+
+@media (max-width: 430px) {
+  .pop-up-page {
+    margin-top: 4em;
+    height: 45vh;
+    width: 100%;
+    /* margin: auto; */
+  }
+}
+
+@media (max-width: 410px) {
+  .pop-up-page {
+    margin-top: 4em;
+    height: 58vh;
+    width: 100%;
+    /* margin: auto; */
+  }
+}
+
+@media (max-width: 315px) {
+  .pop-up-page {
+    margin-top: 4em;
+    height: 60vh;
+    width: 100%;
+    /* margin: auto; */
+  }
+}

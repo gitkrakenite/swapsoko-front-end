@@ -5,7 +5,7 @@ import { MdOutlineContentCopy } from "react-icons/md";
 import "./hero.css";
 import { toast } from "react-toastify";
 import mobile1 from "../assets/images/pic1.png";
-import mobile2 from "../assets/images/exchange.png";
+// import mobile2 from "../assets/images/exchange.png";
 import mobile3 from "../assets/images/pic3.png";
 import mobile4 from "../assets/images/pic2.png";
 
@@ -235,7 +235,7 @@ const Hero = () => {
         </div> */}
         {/* ==================================== */}
         <div
-          className="image-scroller"
+          className="image-scroller hide-scrollbar"
           onMouseEnter={handleInteraction}
           onMouseLeave={() => {
             timerRef.current = setInterval(handleAutoTransition, 4000);

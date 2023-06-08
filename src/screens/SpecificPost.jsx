@@ -5,11 +5,13 @@ import "./ImageList.css";
 import axios from "../axios";
 import { toast } from "react-toastify";
 
-import { Link, useLocation, useParams } from "react-router-dom";
-// import { DummyProducts } from "../dummyData";
+import { Link, useParams } from "react-router-dom";
+
 import moment from "moment";
 import Spinner from "../components/Spinner";
 import { useSelector } from "react-redux";
+import "./specificPost.css";
+import { AiOutlineClose, AiOutlinePhone } from "react-icons/ai";
 
 const SpecificPost = () => {
   const [activeImg, setActiveImg] = useState(null);
@@ -155,6 +157,111 @@ const SpecificPost = () => {
   useEffect(() => {
     fetchAllPosts();
   }, []);
+
+  // working on modal
+  const [selectedPost, setSelectedPost] = useState(null);
+  const [isPopUpOpen, setIsPopUpOpen] = useState(false);
+
+  // what happens when we click on a post
+  const handlePostClick = (post) => {
+    setSelectedPost(post);
+    setIsPopUpOpen(true);
+  };
+
+  const PopUpPage = ({ username, onClose }) => {
+    const [fetchedUser, setFetchedUser] = useState("");
+    const [loadingUser, setLoadingUser] = useState(false);
+    const fetchUser = async () => {
+      try {
+        setLoadingUser(true);
+        const data = { username: selectedPost };
+        // console.log(data);
+        const response = await axios.post("/user", data);
+        if (response) {
+          setFetchedUser(response.data);
+          setLoadingUser(false);
+        }
+        setLoadingUser(false);
+      } catch (error) {
+        toast.error("Could Not Get User Details");
+        setLoadingUser(false);
+      }
+    };
+
+    useEffect(() => {
+      fetchUser();
+    }, [selectedPost]);
+
+    return (
+      <div className="pop-up-page prompt">
+        {/* close btn */}
+        <div className="flex justify-center my-[20px] z-[999] ">
+          <button onClick={onClose}>
+            <AiOutlineClose
+              className="text-5xl p-[10px] rounded-full "
+              style={{
+                border: "2px solid #188c56",
+                position: "sticky",
+                top: "20px",
+              }}
+              title="close"
+            />
+          </button>
+        </div>
+        {/* data */}
+        <div className=" h-[70vh] sm:h-[60vh] overflow-y-scroll prompt">
+          <div>
+            <div className="text-center">
+              {selectedPost == user?.username ? (
+                <h2 className="my-[1em] text-2xl">
+                  You are Viewing Your Profile
+                </h2>
+              ) : (
+                <h2 className="my-[1em] text-2xl">
+                  You are Viewing {selectedPost} Profile
+                </h2>
+              )}
+              {loadingUser && (
+                <p className="text-3xl my-[2em]">Fetching User ...</p>
+              )}
+              {selectedPost == user?.username ? (
+                <h2 className="text-zinc-400" style={{ lineHeight: "1.8em" }}>
+                  Anyone interested with your bid will call via the phone number
+                  provided during registration.{" "}
+                  <Link to="/my-profile" className="text-zinc-200 underline">
+                    See Your Phone Number
+                  </Link>
+                </h2>
+              ) : (
+                <h2 className="text-emerald-500">
+                  Click on the call button to call {selectedPost}
+                </h2>
+              )}
+            </div>
+
+            {user?.username !== selectedPost && (
+              <div className="mt-[2em]">
+                <p className="text-xl px-[15px]">
+                  Call {fetchedUser?.username}
+                </p>
+
+                <p className="text-emerald-500 text-2xl flex items-center gap-[5px] my-[30px] ">
+                  <span>
+                    <AiOutlinePhone />
+                  </span>
+                  <span>
+                    <a href={`tel:${fetchedUser?.phone}`}>
+                      {fetchedUser?.phone}
+                    </a>
+                  </span>
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className=" px-[10px] sm:px-[3em]">
@@ -325,7 +432,7 @@ const SpecificPost = () => {
                   )}
 
                   {/* show all comments */}
-                  <div className="mt-[30px] max-h-[20vh] overflow-y-scroll prompt bg-slate-800 p-[5px] rounded-lg">
+                  <div className="mt-[30px] max-h-[40vh] overflow-y-scroll prompt bg-slate-800 p-[5px] rounded-lg">
                     {/* {console.log(product.comments)} */}
 
                     {/* fetch comments from latest to earliest */}
@@ -337,8 +444,11 @@ const SpecificPost = () => {
                               className=" block md:flex items-center gap-[20px] mb-[16px] pb-[10px]"
                               style={{ borderBottom: "1px solid #5c5b5b" }}
                             >
-                              <p className="">
-                                <span className="text-emerald-700">
+                              <p
+                                className=""
+                                onClick={() => handlePostClick(item.username)}
+                              >
+                                <span className="text-emerald-700 cursor-pointer underline">
                                   {item.username}
                                 </span>
                               </p>
@@ -362,6 +472,16 @@ const SpecificPost = () => {
                 </div>
               </div>
             </div>
+
+            {/* pop up screen */}
+            {isPopUpOpen && (
+              <div className="pop-up-overlay">
+                <PopUpPage
+                  post={selectedPost}
+                  onClose={() => setIsPopUpOpen(false)}
+                />
+              </div>
+            )}
 
             {/* recommended */}
 
